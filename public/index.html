@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VibeCatch Music Recommender</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+      :root {
+        color-scheme: light;
+        --bg-main: #f6f8ff;
+        --bg-soft: #f1ecff;
+        --card: #ffffff;
+        --text: #10213a;
+        --text-muted: #55607a;
+        --primary: #7c3aed;
+        --primary-soft: #8373ff;
+        --button-alt: #4338ca;
+        --border: rgba(97, 66, 186, 0.16);
+        --shadow: 0 18px 45px rgba(34, 37, 89, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+        color: var(--text);
+        background: linear-gradient(135deg, #f5f7ff 0%, #f9f7ff 55%, #eef2ff 100%);
+      }
+
+      .intro-screen {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 28px;
+        transition: opacity 0.35s ease, transform 0.35s ease;
+      }
+
+      .intro-screen.fade-out {
+        opacity: 0;
+        transform: translateY(-12px);
+      }
+
+      .intro-card {
+        width: min(560px, 100%);
+        padding: 44px 38px;
+        border-radius: 34px;
+        border: 1px solid rgba(255, 255, 255, 0.85);
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 32px 72px rgba(58, 45, 121, 0.12);
+        text-align: center;
+        backdrop-filter: blur(16px);
+      }
+
+      .brand-label {
+        display: inline-block;
+        font-size: 0.88rem;
+        font-weight: 700;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: rgba(55, 65, 81, 0.75);
+        margin-bottom: 18px;
+      }
+
+      .brand-mark {
+        font-size: 3.8rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        margin-bottom: 10px;
+        color: #3f2b73;
+        line-height: 1;
+      }
+
+      .tagline {
+        font-size: 1rem;
+        color: var(--text-muted);
+        margin: 0 0 18px;
+        letter-spacing: 0.02em;
+      }
+
+      .intro-copy {
+        color: var(--text);
+        margin-bottom: 22px;
+        font-weight: 600;
+        font-size: 1.02rem;
+      }
+
+      .intro-actions,
+      .auth-switch {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 22px;
+      }
+
+      .auth-card {
+        margin-top: 18px;
+        padding: 20px;
+        border-radius: 24px;
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), #f8f5ff 100%);
+        border: 1px solid var(--border);
+        box-shadow: 0 10px 24px rgba(96, 70, 222, 0.1);
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .container {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      .app-shell {
+        padding-top: 8px;
+      }
+
+      .panel {
+        background: rgba(255, 255, 255, 0.97);
+        border: 1px solid rgba(111, 66, 193, 0.12);
+        border-radius: 28px;
+        padding: 28px;
+        margin-bottom: 22px;
+        box-shadow: none;
+        text-align: center;
+      }
+
+      h1,
+      h2 {
+        margin-top: 0;
+      }
+
+      .panel h2 {
+        text-align: center;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: var(--text);
+      }
+
+      select,
+      input,
+      button {
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        margin-bottom: 12px;
+        width: 100%;
+      }
+
+      input,
+      select {
+        background: #fcfbff;
+        color: var(--text);
+      }
+
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: rgba(124, 58, 237, 0.4);
+        box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.08);
+      }
+
+      button {
+        background: linear-gradient(135deg, var(--primary), var(--button-alt));
+        color: white;
+        cursor: pointer;
+        font-weight: 700;
+        transition: transform 0.2s ease, opacity 0.2s ease;
+        border: none;
+        border-radius: 999px;
+        box-shadow: none;
+        padding: 14px 18px;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: none;
+      }
+
+      button.secondary {
+        background: #ede8ff;
+        color: #3f2b73;
+        border-color: transparent;
+        box-shadow: none;
+      }
+
+      .app-shell {
+        display: block;
+      }
+
+      .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 18px;
+        padding: 28px 32px;
+        border-radius: 28px;
+        background: linear-gradient(135deg, #2f176d 0%, #5d2fc8 50%, #7f57e8 100%);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: none;
+      }
+
+      .top-bar .actions {
+        margin: 0;
+      }
+
+      .top-bar .muted {
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 0.96rem;
+      }
+
+      .top-bar h1 {
+        font-size: 1.8rem;
+        margin-bottom: 4px;
+        color: #ffffff;
+        letter-spacing: 0.02em;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 18px;
+      }
+
+      .video-card {
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(111, 66, 193, 0.12);
+        padding: 16px;
+        border-radius: 22px;
+      }
+
+      .spotify-artwork {
+        text-align: center;
+        margin-bottom: 14px;
+      }
+
+      .spotify-artwork img {
+        width: 100%;
+        border-radius: 16px;
+      }
+
+      iframe {
+        width: 100%;
+        height: 180px;
+        border: 0;
+        border-radius: 16px;
+      }
+
+      .muted {
+        color: var(--text-muted);
+        font-size: 0.95em;
+      }
+
+      .status {
+        padding: 12px;
+        border-radius: 14px;
+        margin-bottom: 12px;
+      }
+
+      .success {
+        background: rgba(44, 136, 113, 0.14);
+        color: #276d5f;
+      }
+
+      .error {
+        background: rgba(152, 48, 92, 0.14);
+        color: #87315d;
+      }
+
+      .history-item {
+        background: rgba(249, 245, 255, 0.9);
+        padding: 12px;
+        border-radius: 16px;
+        margin-bottom: 12px;
+        text-align: center;
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .actions button {
+        width: auto;
+        padding: 10px 14px;
+        margin-bottom: 0;
+      }
+
+      .pill {
+        display: inline-block;
+        background: rgba(124, 58, 237, 0.08);
+        padding: 5px 10px;
+        border-radius: 999px;
+        font-size: 0.88em;
+        margin-right: 6px;
+      }
+
+      .message {
+        min-height: 20px;
+        font-size: 0.95em;
+        margin-top: 10px;
+      }
+
+      .onboarding-panel {
+        min-height: 420px;
+      }
+
+      .onboarding-step {
+        display: none;
+      }
+
+      .onboarding-step.active {
+        display: block;
+      }
+
+      .onboarding-title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+        color: #36216d;
+        text-align: center;
+      }
+
+      .onboarding-subtext {
+        font-size: 1rem;
+        color: var(--text-muted);
+        margin-bottom: 20px;
+        text-align: center;
+      }
+
+      .choice-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 14px;
+      }
+
+      .option-btn {
+        width: 100%;
+        padding: 16px 14px;
+        border-radius: 20px;
+        border: 1px solid #e4dcff;
+        background: #f8f5ff;
+        color: #4b2e95;
+        box-shadow: none;
+        font-weight: 700;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+
+      .option-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: none;
+      }
+
+      .option-btn .emoji {
+        font-size: 1.45rem;
+      }
+
+      .progress-dots {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 24px;
+      }
+
+      .progress-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #dfd5f8;
+      }
+
+      .progress-dot.active {
+        background: linear-gradient(135deg, var(--primary), var(--button-alt));
+        transform: scale(1.18);
+      }
+
+      .history-controls {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .page-title-row {
+        margin-bottom: 16px;
+      }
+
+      .page-title-row h2 {
+        margin-bottom: 6px;
+      }
+
+      .history-controls button {
+        width: auto;
+        padding: 8px 12px;
+        margin-bottom: 0;
+        font-size: 0.84rem;
+        border-radius: 999px;
+        background: #f3ebff;
+        color: #4b2e95;
+        box-shadow: none;
+      }
+
+      .history-controls button:hover {
+        transform: none;
+        box-shadow: none;
+      }
+
+      .history-search {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .history-search input {
+        margin-bottom: 0;
+        min-width: 220px;
+        flex: 1;
+      }
+
+      .history-search button {
+        margin-bottom: 0;
+        width: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <section id="introScreen" class="intro-screen">
+      <div class="intro-card">
+        <div class="brand-mark">VibeCatch</div>
+        <p class="tagline">Catch the Music that Matches Your Day</p>
+        <p class="intro-copy">시작하시겠습니까?</p>
+        <div class="intro-actions">
+          <button id="loginShowBtn">로그인</button>
+          <button id="signupShowBtn" class="secondary">회원가입</button>
+        </div>
+        <div id="authCard" class="auth-card hidden">
+          <button id="backToIntroBtn" class="secondary" type="button">뒤로가기</button>
+          <div class="auth-switch">
+            <button id="switchLoginBtn" class="secondary">로그인</button>
+            <button id="switchSignupBtn" class="secondary">회원가입</button>
+          </div>
+          <form id="authForm">
+            <input id="usernameInput" placeholder="아이디" required />
+            <input id="passwordInput" type="password" placeholder="비밀번호" required />
+            <button type="submit" id="authSubmitBtn">로그인</button>
+          </form>
+          <div id="authMessage" class="message"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="mainApp" class="app-shell hidden">
+      <div class="container">
+        <div class="top-bar">
+          <div>
+            <h1>VibeCatch</h1>
+            <p class="muted">오늘의 분위기에 맞는 음악을 추천해 드립니다.</p>
+          </div>
+          <div class="actions">
+            <button id="myPageBtn" class="secondary">My Page</button>
+            <button id="logoutBtn" class="secondary">로그아웃</button>
+          </div>
+        </div>
+
+        <div id="onboardingPanel" class="panel onboarding-panel">
+          <div class="onboarding-step active" id="stepWeather">
+            <div class="onboarding-title">오늘의 날씨는?</div>
+            <div class="onboarding-subtext">오늘의 분위기를 가장 잘 나타내는 날씨를 선택해 주세요.</div>
+            <div class="choice-grid">
+              <button type="button" class="option-btn" onclick="selectWeather('맑음')"><span class="emoji">☀️</span><span>맑음</span></button>
+              <button type="button" class="option-btn" onclick="selectWeather('흐림')"><span class="emoji">☁️</span><span>흐림</span></button>
+              <button type="button" class="option-btn" onclick="selectWeather('눈')"><span class="emoji">❄️</span><span>눈</span></button>
+              <button type="button" class="option-btn" onclick="selectWeather('비')"><span class="emoji">🌧️</span><span>비</span></button>
+              <button type="button" class="option-btn" onclick="selectWeather('더움')"><span class="emoji">🌡️</span><span>더움</span></button>
+              <button type="button" class="option-btn" onclick="selectWeather('쌀쌀')"><span class="emoji">🍃</span><span>쌀쌀</span></button>
+              <button type="button" class="option-btn" onclick="selectWeather('추움')"><span class="emoji">🧊</span><span>추움</span></button>
+            </div>
+          </div>
+
+          <div class="onboarding-step" id="stepMood">
+            <div class="onboarding-title"><span id="moodTitleName">사용자</span>님의 기분을 고르세요!</div>
+            <div class="onboarding-subtext">지금 느끼는 감정에 가장 가까운 버튼을 선택해 주세요.</div>
+            <div class="choice-grid">
+              <button type="button" class="option-btn" onclick="selectMood('보통')"><span class="emoji">🙂</span><span>보통</span></button>
+              <button type="button" class="option-btn" onclick="selectMood('기쁨')"><span class="emoji">😄</span><span>기쁨</span></button>
+              <button type="button" class="option-btn" onclick="selectMood('우울')"><span class="emoji">😔</span><span>우울</span></button>
+              <button type="button" class="option-btn" onclick="selectMood('슬픔')"><span class="emoji">😢</span><span>슬픔</span></button>
+              <button type="button" class="option-btn" onclick="selectMood('화남')"><span class="emoji">😠</span><span>화남</span></button>
+              <button type="button" class="option-btn" onclick="selectMood('상쾌')"><span class="emoji">✨</span><span>상쾌</span></button>
+            </div>
+          </div>
+
+          <div class="onboarding-step" id="stepGenre">
+            <div class="onboarding-title">장르를 택하세요!</div>
+            <div class="onboarding-subtext">좋아하는 장르를 하나 골라주세요.</div>
+            <div class="choice-grid">
+              <button type="button" class="option-btn" onclick="selectGenre('Pop')"><span class="emoji">🎤</span><span>팝</span></button>
+              <button type="button" class="option-btn" onclick="selectGenre('Rock')"><span class="emoji">🎸</span><span>락</span></button>
+              <button type="button" class="option-btn" onclick="selectGenre('Hip-Hop')"><span class="emoji">🎧</span><span>힙합</span></button>
+              <button type="button" class="option-btn" onclick="selectGenre('Ballad')"><span class="emoji">🎼</span><span>발라드</span></button>
+              <button type="button" class="option-btn" onclick="selectGenre('Jazz')"><span class="emoji">🎷</span><span>재즈</span></button>
+              <button type="button" class="option-btn" onclick="selectGenre('Classic')"><span class="emoji">🎻</span><span>클래식</span></button>
+              <button type="button" class="option-btn" onclick="selectGenre('Rhythm and Blues & Soul')"><span class="emoji">🎺</span><span>R&B / 소울</span></button>
+              <button type="button" class="option-btn" onclick="selectGenre('Electronic Dance Music')"><span class="emoji">💃</span><span>EDM</span></button>
+            </div>
+          </div>
+
+          <div class="onboarding-step" id="stepSource">
+            <div class="onboarding-title">추천 소스를 선택해 주세요.</div>
+            <div class="onboarding-subtext">YouTube 또는 Spotify 중 원하는 플랫폼을 고르세요.</div>
+            <div class="choice-grid">
+              <button type="button" class="option-btn" onclick="selectSource('youtube')"><span class="emoji">📺</span><span>YouTube</span></button>
+              <button type="button" class="option-btn" onclick="selectSource('spotify')"><span class="emoji">🎵</span><span>Spotify</span></button>
+            </div>
+          </div>
+
+          <div class="progress-dots" aria-label="진행 단계">
+            <span class="progress-dot active"></span>
+            <span class="progress-dot"></span>
+            <span class="progress-dot"></span>
+            <span class="progress-dot"></span>
+          </div>
+        </div>
+
+        <div id="mainContent" class="hidden">
+          <div class="panel">
+            <h2>추천 음악</h2>
+            <div id="status" class="status"></div>
+            <div id="recommendations" class="grid"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="myPageView" class="app-shell hidden">
+      <div class="container">
+        <div class="top-bar">
+          <div>
+            <h1>My Page</h1>
+            <p class="muted">저장된 음악 기록을 확인해 보세요.</p>
+          </div>
+          <div class="actions">
+            <button id="backToMainBtn" class="secondary">메인으로</button>
+            <button id="logoutBtnMyPage" class="secondary">로그아웃</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="page-title-row">
+            <h2>My Page</h2>
+            <p class="muted">사용자가 저장한 음악 히스토리를 확인할 수 있습니다.</p>
+          </div>
+          <div class="history-controls">
+            <button onclick="loadHistory('latest', 'myPageHistoryList')">최신순</button>
+            <button onclick="loadHistory('search', 'myPageHistoryList')">검색</button>
+          </div>
+          <div class="history-search">
+            <input id="myPageSearchBox" placeholder="검색어 입력" />
+            <button onclick="searchHistory('myPageHistoryList', 'myPageSearchBox')">검색</button>
+          </div>
+          <div id="myPageHistoryList"></div>
+        </div>
+      </div>
+    </section>
+
+    <script>
+      const authCard = document.getElementById('authCard');
+      const authForm = document.getElementById('authForm');
+      const authSubmitBtn = document.getElementById('authSubmitBtn');
+      const authMessage = document.getElementById('authMessage');
+      const introScreen = document.getElementById('introScreen');
+      const mainApp = document.getElementById('mainApp');
+      const myPageView = document.getElementById('myPageView');
+      const onboardingPanel = document.getElementById('onboardingPanel');
+      const mainContent = document.getElementById('mainContent');
+      const usernameInput = document.getElementById('usernameInput');
+      const passwordInput = document.getElementById('passwordInput');
+      const introActions = document.querySelector('.intro-actions');
+      const introCopy = document.querySelector('.intro-copy');
+      const authSwitch = document.querySelector('.auth-switch');
+      const backToIntroBtn = document.getElementById('backToIntroBtn');
+      let authMode = 'login';
+      let onboardingStep = 0;
+      let selectedWeather = '';
+      let selectedMood = '';
+      let selectedGenre = '';
+      let selectedSource = 'youtube';
+      let currentUserName = '사용자';
+
+      function updateIntroView() {
+        const showForm = !authCard.classList.contains('hidden');
+        introActions.classList.toggle('hidden', showForm);
+        introCopy.classList.toggle('hidden', showForm);
+        authSwitch.classList.toggle('hidden', showForm);
+        backToIntroBtn.classList.toggle('hidden', showForm);
+      }
+
+      function showAuthForm(mode) {
+        authMode = mode;
+        authCard.classList.remove('hidden');
+        authSubmitBtn.textContent = mode === 'login' ? '로그인' : '회원가입';
+        authMessage.textContent = '';
+        usernameInput.value = '';
+        passwordInput.value = '';
+        updateIntroView();
+        usernameInput.focus();
+      }
+
+      function saveAuth(token, username) {
+        sessionStorage.setItem('vibecatch_token', token);
+        if (username) {
+          sessionStorage.setItem('vibecatch_user', username);
+        }
+      }
+
+      function clearAuth() {
+        sessionStorage.removeItem('vibecatch_token');
+        sessionStorage.removeItem('vibecatch_user');
+      }
+
+      function showIntro() {
+        introScreen.classList.remove('fade-out');
+        introScreen.classList.remove('hidden');
+        mainApp.classList.add('hidden');
+        myPageView.classList.add('hidden');
+        authCard.classList.add('hidden');
+        updateIntroView();
+      }
+
+      function showMainApp() {
+        introScreen.classList.add('fade-out');
+        setTimeout(() => {
+          introScreen.classList.add('hidden');
+          mainApp.classList.remove('hidden');
+          myPageView.classList.add('hidden');
+          onboardingPanel.classList.remove('hidden');
+          mainContent.classList.add('hidden');
+          onboardingStep = 0;
+          renderOnboardingStep();
+        }, 220);
+      }
+
+      function showMyPage() {
+        mainApp.classList.add('hidden');
+        myPageView.classList.remove('hidden');
+        loadHistory('latest', 'myPageHistoryList');
+      }
+
+      function showMainContent() {
+        onboardingPanel.classList.add('hidden');
+        mainContent.classList.remove('hidden');
+      }
+
+      function renderOnboardingStep() {
+        document.querySelectorAll('.onboarding-step').forEach((step, index) => {
+          const isActive = index === onboardingStep;
+          step.classList.toggle('active', isActive);
+          step.classList.toggle('hidden', !isActive);
+        });
+
+        document.querySelectorAll('.progress-dot').forEach((dot, index) => {
+          dot.classList.toggle('active', index === onboardingStep);
+        });
+
+        const moodTitle = document.getElementById('moodTitleName');
+        if (moodTitle) {
+          moodTitle.textContent = currentUserName;
+        }
+      }
+
+      function selectWeather(value) {
+        selectedWeather = value;
+        onboardingStep = 1;
+        renderOnboardingStep();
+      }
+
+      function selectMood(value) {
+        selectedMood = value;
+        onboardingStep = 2;
+        renderOnboardingStep();
+      }
+
+      function selectGenre(value) {
+        selectedGenre = value;
+        onboardingStep = 3;
+        renderOnboardingStep();
+      }
+
+      async function selectSource(value) {
+        selectedSource = value;
+        try {
+          await fetchRecommendations();
+          showMainContent();
+        } catch (err) {
+          const status = document.getElementById('status');
+          status.className = 'status error';
+          status.innerHTML = err.message || '추천을 시작하지 못했습니다.';
+        }
+      }
+
+      function setAuthMessage(message, type = 'error') {
+        authMessage.textContent = message;
+        authMessage.style.color = type === 'success' ? '#92f0ab' : '#ffb3b3';
+      }
+
+      async function handleAuthSubmit(event) {
+        event.preventDefault();
+        const username = usernameInput.value.trim();
+        const password = passwordInput.value;
+
+        if (!username || !password) {
+          setAuthMessage('아이디와 비밀번호를 모두 입력해주세요.');
+          return;
+        }
+
+        authSubmitBtn.disabled = true;
+        setAuthMessage('처리 중입니다...');
+
+        try {
+          const endpoint = authMode === 'login' ? '/auth/login' : '/auth/register';
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+          });
+          let data = null;
+          try {
+            data = await res.json();
+          } catch (parseErr) {
+            data = { error: '서버 응답을 읽지 못했습니다.' };
+          }
+
+          if (!res.ok) {
+            throw new Error(data?.error || '인증 처리에 실패했습니다.');
+          }
+
+          if (authMode === 'register') {
+            const loginRes = await fetch('/auth/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username, password })
+            });
+            let loginData = null;
+            try {
+              loginData = await loginRes.json();
+            } catch (parseErr) {
+              loginData = { error: '로그인 응답을 읽지 못했습니다.' };
+            }
+            if (!loginRes.ok) {
+              throw new Error(loginData?.error || '로그인 처리에 실패했습니다.');
+            }
+            if (!loginData?.token) {
+              throw new Error('로그인 응답이 올바르지 않습니다.');
+            }
+            saveAuth(loginData.token, loginData.user?.username || username);
+            currentUserName = loginData.user?.username || username;
+            setAuthMessage('가입이 완료됐어요. 다음 단계로 이동합니다.', 'success');
+            setTimeout(() => showMainApp(), 400);
+            return;
+          }
+
+          if (!data?.token) {
+            throw new Error('로그인 응답이 올바르지 않습니다.');
+          }
+
+          saveAuth(data.token, data.user?.username || username);
+          currentUserName = data.user?.username || username;
+          setAuthMessage('로그인되었습니다. 다음 단계로 이동합니다.', 'success');
+          setTimeout(() => showMainApp(), 400);
+        } catch (err) {
+          const fallbackMessage = '인증 처리에 실패했습니다. 아이디와 비밀번호를 다시 확인해주세요.';
+          const message = err?.message || fallbackMessage;
+          const isTechnicalError = /username|password|Unexpected|Error|response|fetch/i.test(message);
+          setAuthMessage(isTechnicalError ? fallbackMessage : message);
+        } finally {
+          authSubmitBtn.disabled = false;
+        }
+      }
+
+      function logout() {
+        clearAuth();
+        showIntro();
+      }
+
+      function initAuth() {
+        const savedToken = sessionStorage.getItem('vibecatch_token');
+        const savedUser = sessionStorage.getItem('vibecatch_user');
+        currentUserName = savedUser || '사용자';
+        if (savedToken) {
+          showMainApp();
+        } else {
+          showIntro();
+        }
+      }
+
+      document.getElementById('loginShowBtn').addEventListener('click', () => showAuthForm('login'));
+      document.getElementById('signupShowBtn').addEventListener('click', () => showAuthForm('register'));
+      document.getElementById('switchLoginBtn').addEventListener('click', () => showAuthForm('login'));
+      document.getElementById('switchSignupBtn').addEventListener('click', () => showAuthForm('register'));
+      document.getElementById('backToIntroBtn').addEventListener('click', showIntro);
+      authForm.addEventListener('submit', handleAuthSubmit);
+      document.getElementById('logoutBtn').addEventListener('click', logout);
+      document.getElementById('logoutBtnMyPage').addEventListener('click', logout);
+      document.getElementById('myPageBtn').addEventListener('click', showMyPage);
+      document.getElementById('backToMainBtn').addEventListener('click', showMainApp);
+
+      async function fetchRecommendations() {
+        const weather = selectedWeather;
+        const mood = selectedMood;
+        const genre = selectedGenre;
+        const source = selectedSource;
+        const status = document.getElementById('status');
+        status.innerHTML = '';
+
+        if (!weather || !mood || !genre) {
+          status.className = 'status error';
+          status.innerHTML = '선택이 완료되지 않았습니다.';
+          throw new Error('선택이 완료되지 않았습니다.');
+        }
+
+        try {
+          const res = await fetch('/api/recommendations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ weather, mood, genre, source })
+          });
+          const data = await res.json();
+
+          if (!res.ok) throw new Error(data.error || '추천 요청 실패');
+
+          const container = document.getElementById('recommendations');
+          container.innerHTML = '';
+          data.videos.forEach(video => {
+            const card = document.createElement('div');
+            card.className = 'video-card';
+            if (video.source === 'spotify') {
+              card.innerHTML = `
+                <div class="spotify-artwork"><img src="${video.image || ''}" alt="${video.title}" /></div>
+                <h3>${video.title}</h3>
+                <p class="muted">${video.channelTitle || 'Spotify'} · ${video.albumName || ''}</p>
+                <div class="actions">
+                  <button type="button" onclick="window.open('${video.spotifyUrl.replace(/'/g, "\\'")}', '_blank', 'noopener,noreferrer')">Spotify에서 듣기</button>
+                  <button onclick="saveToMyPage('${video.videoId}', '${video.title.replace(/'/g, "\\'")}', '${video.channelTitle || ''}', 'spotify', '${(video.spotifyUrl || '').replace(/'/g, "\\'")}')">저장</button>
+                </div>
+              `;
+            } else {
+              card.innerHTML = `
+                <iframe src="https://www.youtube.com/embed/${video.videoId}" allowfullscreen></iframe>
+                <h3>${video.title}</h3>
+                <p class="muted">${video.channelTitle || 'YouTube'}</p>
+                <div class="actions">
+                  <button onclick="saveToMyPage('${video.videoId}', '${video.title.replace(/'/g, "\\'")}', '${video.channelTitle || ''}', 'youtube')">저장</button>
+                </div>
+              `;
+            }
+            container.appendChild(card);
+          });
+
+          status.className = 'status success';
+          status.innerHTML = `${data.message}<br>${data.apiMessage}`;
+          loadHistory('latest');
+        } catch (err) {
+          status.className = 'status error';
+          status.innerHTML = err.message;
+          throw err;
+        }
+      }
+
+      async function saveToMyPage(videoId, title, channelTitle, source = 'youtube', spotifyUrl = '') {
+        try {
+          const res = await fetch('/api/history', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ videoId, title, channelTitle, source, spotifyUrl })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || '저장 실패');
+          loadHistory('latest', 'myPageHistoryList');
+          alert(data.message);
+        } catch (e) {
+          alert(e.message);
+        }
+      }
+
+      async function playHistory(videoId, title, channelTitle, source = 'youtube', spotifyUrl = '') {
+        try {
+          const normalizedSource = String(source || '').toLowerCase();
+          const normalizedSpotifyUrl = String(spotifyUrl || '').trim();
+          const mediaUrl = normalizedSource === 'spotify' && normalizedSpotifyUrl
+            ? normalizedSpotifyUrl
+            : `https://www.youtube.com/watch?v=${videoId}`;
+
+          window.open(mediaUrl, '_blank', 'noopener,noreferrer');
+
+          const res = await fetch('/api/history', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ videoId, title, channelTitle, source: normalizedSource, spotifyUrl: normalizedSpotifyUrl })
+          });
+          // Try to parse JSON if present, but don't assume a JSON body to avoid parse errors
+          let data = null;
+          try {
+            const ct = res.headers.get('content-type') || '';
+            if (ct.includes('application/json')) data = await res.json();
+            else data = { message: await res.text() };
+          } catch (e) {
+            data = { message: '재생 기록 응답을 처리하지 못했습니다.' };
+          }
+          if (!res.ok) throw new Error(data.error || data.message || '재생 기록 실패');
+          // Note: '재생 수' (hit count) feature removed — no hit increment on play
+          loadHistory('latest', 'myPageHistoryList');
+        } catch (e) {
+          alert(e.message);
+        }
+      }
+
+      async function deleteHistoryEntry(videoId) {
+        try {
+          const res = await fetch(`/api/history/${videoId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          let data = null;
+          try {
+            const ct = res.headers.get('content-type') || '';
+            if (ct.includes('application/json')) data = await res.json();
+            else data = { message: await res.text() };
+          } catch (e) {
+            data = { message: '서버 응답을 처리하지 못했습니다.' };
+          }
+          if (!res.ok) throw new Error(data.error || data.message || '삭제 실패');
+          loadHistory('latest', 'myPageHistoryList');
+          alert(data.message);
+        } catch (e) {
+          alert(e.message);
+        }
+      }
+
+      async function loadHistory(sortBy = 'latest', targetId = 'historyList') {
+        try {
+          const res = await fetch(`/api/history?sortBy=${sortBy}`);
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || '히스토리 로드 실패');
+          renderHistory(data.history, targetId);
+        } catch (e) {
+          document.getElementById(targetId).innerHTML = `<div class='status error'>${e.message}</div>`;
+        }
+      }
+
+      async function searchHistory(targetId = 'historyList', searchBoxId = 'searchBox') {
+        const query = document.getElementById(searchBoxId).value.trim();
+        try {
+          const res = await fetch(`/api/history?sortBy=search&query=${encodeURIComponent(query)}`);
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || '검색 실패');
+          renderHistory(data.history, targetId);
+        } catch (e) {
+          document.getElementById(targetId).innerHTML = `<div class='status error'>${e.message}</div>`;
+        }
+      }
+
+      function renderHistory(history, targetId = 'historyList') {
+        const list = document.getElementById(targetId);
+        if (!list) return;
+        if (!history.length) {
+          list.innerHTML = '<div class="muted">기록이 없습니다.</div>';
+          return;
+        }
+
+        list.innerHTML = history.map(item => `
+          <div class="history-item">
+            <strong>${item.title}</strong><br/>
+            <span class="muted">${item.channelTitle || 'YouTube'} · ${item.playedAt}</span><br/>
+            <div class="actions">
+              <button onclick="playHistory('${item.videoId}', '${item.title.replace(/'/g, "\\'")}', '${item.channelTitle || ''}', '${item.source || 'youtube'}', '${(item.spotifyUrl || '').replace(/'/g, "\\'")}')">선택재생</button>
+                <button class="secondary" type="button" onclick="deleteHistoryEntry('${item.videoId}')">삭제</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      window.addEventListener('DOMContentLoaded', () => {
+        initAuth();
+        loadHistory('latest');
+      });
+    </script>
+  </body>
+</html>

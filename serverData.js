@@ -63,7 +63,17 @@ function addHistoryEntry({ userContext, videoId, title, channelTitle, source = '
 function removeHistoryEntry(userContext, videoId) {
   const userId = userContext ? Number(userContext.userId ?? userContext.id) : null;
   const username = userContext ? userContext.username : 'anonymous';
-  const index = history.findIndex((item) => item.userId === userId && item.videoId === videoId);
+  // Prefer strict match by userId + videoId
+  let index = history.findIndex((item) => item.userId === userId && item.videoId === videoId);
+  // If not found, try matching by username + videoId (useful when userContext shape differs)
+  if (index === -1) {
+    index = history.findIndex((item) => item.username === username && item.videoId === videoId);
+  }
+  // As a last resort for anonymous or legacy entries, remove any entry with the videoId
+  if (index === -1 && !userContext) {
+    index = history.findIndex((item) => item.videoId === videoId);
+  }
+
   if (index === -1) return false;
   history.splice(index, 1);
   return true;

@@ -102,32 +102,39 @@ const recommendVideos = async (req, res, next) => {
 
     const query = `${genre} ${weather} ${mood}`;
     const apiKey = process.env.YOUTUBE_API_KEY || process.env.youtube_api_key;
+    const useSpotify = source === 'spotify' || source === 'both';
+    const useYouTube = source === 'youtube' || source === 'both';
 
-    let videos = [];
+    let spotifyVideos = [];
+    let youtubeVideos = [];
     let apiMessage = '추천 실패';
+    const spotifyFailures = [];
+    const youtubeFailures = [];
 
-    if (source === 'spotify') {
+    if (useSpotify) {
       try {
-        console.log('Spotify source selected', { genre, weather, mood });
-        videos = await searchSpotifyTracks({ genre, weather, mood, accessToken: await getSpotifyAccessToken() });
-        if (videos.length > 0) {
+        console.log('Spotify source selected', { genre, weather, mood, source });
+        const accessToken = await getSpotifyAccessToken();
+        spotifyVideos = await searchSpotifyTracks({ genre, weather, mood, accessToken });
+        if (spotifyVideos.length > 0) {
           apiMessage = 'Spotify 검색 기반 완료';
         } else {
           console.log('Spotify search returned no results; falling back to recommendations');
-          videos = await getSpotifyRecommendations({ genre, weather, mood });
-          if (videos.length > 0) {
+          spotifyVideos = await getSpotifyRecommendations({ genre, weather, mood, accessToken });
+          if (spotifyVideos.length > 0) {
             apiMessage = 'Spotify 추천 기반 대체 완료';
           } else {
-            apiMessage = 'Spotify에서 결과가 없어 YouTube로 대체합니다.';
+            apiMessage = 'Spotify에서 결과가 없어 대체합니다.';
           }
         }
       } catch (err) {
         console.error('Spotify error', err);
+        spotifyFailures.push(err.message || String(err));
         apiMessage = `Spotify API 오류: ${err.message}`;
       }
     }
 
-    if (videos.length === 0 && apiKey) {
+    if (useYouTube && apiKey) {
       try {
         const youtubeQuery = `${query} official music video audio`;
         const apiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoCategoryId=10&videoEmbeddable=true&videoDefinition=high&maxResults=10&q=${encodeURIComponent(youtubeQuery)}&key=${apiKey}`;
@@ -137,7 +144,7 @@ const recommendVideos = async (req, res, next) => {
           const officialPattern = /(official|audio|mv|뮤직비디오|공식|오피셜|video clip)/i;
           const officialChannelPattern = /(official|오피셜|공식|music channel|music official|label|entertainment|records)/i;
 
-          const scoredItems = youtubeResponse.items
+          youtubeVideos = youtubeResponse.items
             .filter((item) => {
               const text = `${item.snippet.title || ''} ${item.snippet.description || ''}`;
               return !blockedPattern.test(text);
@@ -167,20 +174,34 @@ const recommendVideos = async (req, res, next) => {
               source: 'youtube',
             }));
 
-          if (scoredItems.length > 0) {
-            videos = scoredItems;
-            apiMessage = source === 'spotify' ? `${apiMessage} / YouTube 대체 추천 완료` : 'YouTube 추천 완료';
+          if (youtubeVideos.length > 0) {
+            apiMessage = source === 'both' ? `${apiMessage} / YouTube 추천 완료` : 'YouTube 추천 완료';
           }
         }
       } catch (err) {
+        youtubeFailures.push(err.message || String(err));
         if (!apiMessage.startsWith('Spotify API 오류')) {
           apiMessage = `YouTube API 오류: ${err.message}`;
         }
       }
     }
 
+    let videos = [...spotifyVideos, ...youtubeVideos];
+    const seenVideoIds = new Set();
+    videos = videos.filter((video) => {
+      const id = video.videoId || '';
+      if (seenVideoIds.has(id)) return false;
+      seenVideoIds.add(id);
+      return true;
+    });
+
     if (videos.length === 0) {
       videos = FALLBACK_VIDEOS.map((video) => ({ ...video, hitCount: 0, source: 'youtube' }));
+    }
+
+    if (source === 'both') {
+      const mixedVideos = videos.sort(() => Math.random() - 0.5);
+      videos = mixedVideos;
     }
 
     const message = `${weather} / ${mood} / ${genre} 조합에 맞는 추천 음악을 준비했습니다.`;
@@ -355,7 +376,8 @@ async function getSpotifyRecommendations({ genre, weather, mood }) {
   }
 
   const validTracks = data.tracks
-    .filter((track) => track.type === 'track' && !isPodcastTrack(track) && isSpotifyTrackOfficial(track) && isTrackAlbumTypeValid(track) && !isSpotifyTrackByBlockedArtist(track));
+    .filter((track) => track.type === 'track' && !isPodcastTrack(track) && isTrackAlbumTypeValid(track))
+    .slice(0, 8);
 
   const artistIds = Array.from(new Set(validTracks.flatMap((track) => track.artists?.map((artist) => artist.id).filter(Boolean) || [])));
   const artistPopularityMap = await fetchSpotifyArtistPopularity(artistIds, accessToken);
@@ -452,7 +474,8 @@ async function searchSpotifyTracks({ genre, weather, mood, accessToken }) {
   }
 
   const validTracks = data.tracks.items
-    .filter((track) => track.type === 'track' && !isPodcastTrack(track) && isSpotifyTrackOfficial(track) && isTrackAlbumTypeValid(track) && !isSpotifyTrackByBlockedArtist(track));
+    .filter((track) => track.type === 'track' && !isPodcastTrack(track) && isTrackAlbumTypeValid(track))
+    .slice(0, 8);
 
   const artistIds = Array.from(new Set(validTracks.flatMap((track) => track.artists?.map((artist) => artist.id).filter(Boolean) || [])));
   const artistPopularityMap = await fetchSpotifyArtistPopularity(artistIds, accessToken);

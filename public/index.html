@@ -130,6 +130,7 @@
         padding: 28px;
         margin-bottom: 22px;
         box-shadow: none;
+        position: relative;
         text-align: center;
       }
 
@@ -442,6 +443,131 @@
         margin-bottom: 0;
         width: auto;
       }
+
+      .password-wrap {
+        position: relative;
+        width: 100%;
+      }
+
+      .password-wrap input {
+        padding-right: 48px;
+      }
+
+      .password-toggle {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        margin: 0;
+        border: none;
+        background: transparent;
+        color: var(--text-muted);
+        box-shadow: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .password-toggle:hover {
+        transform: translateY(-50%) scale(1.04);
+        box-shadow: none;
+        color: #3f2b73;
+      }
+
+      /* SVG icon sizing */
+      .password-toggle svg {
+        width: 18px;
+        height: 18px;
+        display: block;
+      }
+
+      /* show eye by default, show eye-slash when .active */
+      .password-toggle .eye-slash {
+        display: none;
+      }
+      .password-toggle.active .eye {
+        display: none;
+      }
+      .password-toggle.active .eye-slash {
+        display: block;
+      }
+      .page-controls-inline {
+        position: absolute;
+        right: 14px;
+        top: 12px;
+        display: flex;
+        gap: 8px;
+        z-index: 1300;
+      }
+
+      .inline-nav-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        border: none;
+        background: rgba(63,43,115,0.96);
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 6px 18px rgba(63,43,115,0.18);
+        cursor: pointer;
+        padding: 0;
+      }
+
+      .inline-nav-btn svg { width: 12px; height: 12px; stroke: #fff; stroke-width: 1.8; fill: none; }
+      /* Page navigation (back/forward) buttons */
+      .page-nav {
+        position: fixed;
+        left: 12px;
+        right: auto;
+        bottom: 18px;
+        display: flex;
+        gap: 10px;
+        z-index: 2147483647;
+        pointer-events: auto;
+        align-items: center;
+        transition: opacity 200ms ease, transform 200ms ease;
+      }
+
+      .nav-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        border: none;
+        background: linear-gradient(135deg, var(--primary), var(--button-alt));
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        box-shadow: 0 10px 30px rgba(63, 43, 115, 0.18);
+        cursor: pointer;
+        padding: 0;
+      }
+
+      .nav-btn svg {
+        width: 14px;
+        height: 14px;
+        display: block;
+        fill: none;
+        stroke: #fff;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .nav-btn:hover { transform: translateY(-3px) scale(1.02); }
+      /* Force pageNav to the left edge in case other rules override it */
+      #pageNav {
+        left: 6px !important;
+        right: auto !important;
+        justify-content: flex-start !important;
+        transform: none !important;
+      }
     </style>
   </head>
   <body>
@@ -462,13 +588,35 @@
           </div>
           <form id="authForm">
             <input id="usernameInput" placeholder="아이디" required />
-            <input id="passwordInput" type="password" placeholder="비밀번호" required />
+            <div class="password-wrap">
+              <input id="passwordInput" type="password" placeholder="비밀번호" required />
+              <button type="button" class="password-toggle" id="passwordToggleBtn" aria-label="비밀번호 표시" title="비밀번호 표시/숨기기">
+                <!-- Eye (visible) -->
+                <svg class="eye" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <!-- Eye with slash (hidden) -->
+                <svg class="eye-slash" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M3 3l18 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
             <button type="submit" id="authSubmitBtn">로그인</button>
           </form>
           <div id="authMessage" class="message"></div>
         </div>
       </div>
     </section>
+
+    <!-- Page navigation controls (hidden on login) -->
+    <div id="pageNav" class="page-nav hidden" aria-hidden="true">
+      <button id="navBackBtn" class="nav-btn" title="뒤로 가기" aria-label="뒤로 가기">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
 
     <section id="mainApp" class="app-shell hidden">
       <div class="container">
@@ -526,12 +674,20 @@
             </div>
           </div>
 
+            <!-- Inline nav controls for onboarding -->
+            <div class="page-controls-inline" aria-hidden="true">
+              <button id="onboardingBackBtn" class="inline-nav-btn" title="뒤로" aria-label="뒤로">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+                </button>
+            </div>
+
           <div class="onboarding-step" id="stepSource">
             <div class="onboarding-title">추천 소스를 선택해 주세요.</div>
-            <div class="onboarding-subtext">YouTube 또는 Spotify 중 원하는 플랫폼을 고르세요.</div>
+            <div class="onboarding-subtext">YouTube, Spotify, 또는 둘 다로 추천받을 수 있어요.</div>
             <div class="choice-grid">
               <button type="button" class="option-btn" onclick="selectSource('youtube')"><span class="emoji">📺</span><span>YouTube</span></button>
               <button type="button" class="option-btn" onclick="selectSource('spotify')"><span class="emoji">🎵</span><span>Spotify</span></button>
+              <button type="button" class="option-btn" onclick="selectSource('both')"><span class="emoji">🎧</span><span>둘 다</span></button>
             </div>
           </div>
 
@@ -545,7 +701,13 @@
 
         <div id="mainContent" class="hidden">
           <div class="panel">
-            <h2>추천 음악</h2>
+              <h2>추천 음악</h2>
+              <!-- Inline nav controls for recommendations -->
+              <div class="page-controls-inline" aria-hidden="true">
+                <button id="recommendBackBtn" class="inline-nav-btn" title="뒤로" aria-label="뒤로">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+                  </button>
+              </div>
             <div id="status" class="status"></div>
             <div id="recommendations" class="grid"></div>
           </div>
@@ -607,6 +769,18 @@
       let selectedGenre = '';
       let selectedSource = 'youtube';
       let currentUserName = '사용자';
+      let __isHandlingPopstate = false;
+
+      function pushAppState(page, extra) {
+        if (__isHandlingPopstate) return;
+        const state = Object.assign({ page }, extra || {});
+        try { history.pushState(state, ''); } catch (e) { /* ignore */ }
+      }
+
+      function replaceAppState(page, extra) {
+        const state = Object.assign({ page }, extra || {});
+        try { history.replaceState(state, ''); } catch (e) { /* ignore */ }
+      }
 
       function updateIntroView() {
         const showForm = !authCard.classList.contains('hidden');
@@ -624,6 +798,8 @@
         usernameInput.value = '';
         passwordInput.value = '';
         updateIntroView();
+        updateNavVisibility();
+        pushAppState('auth', { authMode: mode });
         usernameInput.focus();
       }
 
@@ -646,6 +822,8 @@
         myPageView.classList.add('hidden');
         authCard.classList.add('hidden');
         updateIntroView();
+        updateNavVisibility();
+        pushAppState('intro');
       }
 
       function showMainApp() {
@@ -658,6 +836,8 @@
           mainContent.classList.add('hidden');
           onboardingStep = 0;
           renderOnboardingStep();
+          updateNavVisibility();
+          pushAppState('main');
         }, 220);
       }
 
@@ -665,11 +845,30 @@
         mainApp.classList.add('hidden');
         myPageView.classList.remove('hidden');
         loadHistory('latest', 'myPageHistoryList');
+        updateNavVisibility();
+        pushAppState('my');
       }
 
       function showMainContent() {
         onboardingPanel.classList.add('hidden');
         mainContent.classList.remove('hidden');
+        updateNavVisibility();
+        pushAppState('recommend');
+      }
+
+      // Show global nav back button only on onboarding panel
+      function updateNavVisibility() {
+        const nav = document.getElementById('pageNav');
+        if (!nav) return;
+        const authVisible = authCard && !authCard.classList.contains('hidden');
+        const introVisible = introScreen && !introScreen.classList.contains('hidden');
+        const onboardingVisible = onboardingPanel && !onboardingPanel.classList.contains('hidden');
+        // show ONLY when onboarding panel is visible; hide on intro/auth/main/recommend/my
+        if (onboardingVisible && !authVisible && !introVisible) {
+          nav.classList.remove('hidden');
+        } else {
+          nav.classList.add('hidden');
+        }
       }
 
       function renderOnboardingStep() {
@@ -687,6 +886,10 @@
         if (moodTitle) {
           moodTitle.textContent = currentUserName;
         }
+        // ensure nav visibility updates as onboarding steps change
+        updateNavVisibility();
+        // push state for onboarding step so back/forward navigates between steps
+        pushAppState('onboarding', { step: onboardingStep });
       }
 
       function selectWeather(value) {
@@ -819,6 +1022,24 @@
       document.getElementById('switchLoginBtn').addEventListener('click', () => showAuthForm('login'));
       document.getElementById('switchSignupBtn').addEventListener('click', () => showAuthForm('register'));
       document.getElementById('backToIntroBtn').addEventListener('click', showIntro);
+      (function() {
+        const toggleBtn = document.getElementById('passwordToggleBtn');
+        const passwordInput = document.getElementById('passwordInput');
+        // Initialize state
+        toggleBtn.classList.remove('active');
+        toggleBtn.addEventListener('click', () => {
+          const isShowing = passwordInput.type === 'text';
+          if (isShowing) {
+            passwordInput.type = 'password';
+            toggleBtn.classList.remove('active');
+            toggleBtn.setAttribute('aria-label', '비밀번호 표시');
+          } else {
+            passwordInput.type = 'text';
+            toggleBtn.classList.add('active');
+            toggleBtn.setAttribute('aria-label', '비밀번호 숨기기');
+          }
+        });
+      })();
       authForm.addEventListener('submit', handleAuthSubmit);
       document.getElementById('logoutBtn').addEventListener('click', logout);
       document.getElementById('logoutBtnMyPage').addEventListener('click', logout);
@@ -1003,6 +1224,55 @@
       window.addEventListener('DOMContentLoaded', () => {
         initAuth();
         loadHistory('latest');
+        // global nav button handlers (back only)
+        const backBtn = document.getElementById('navBackBtn');
+        if (backBtn) backBtn.addEventListener('click', () => { window.history.back(); });
+
+        // inline onboarding/recommend buttons (back only)
+        const obBack = document.getElementById('onboardingBackBtn');
+        const recBack = document.getElementById('recommendBackBtn');
+        if (obBack) obBack.addEventListener('click', () => { window.history.back(); });
+        if (recBack) recBack.addEventListener('click', () => { window.history.back(); });
+
+        // ensure nav visibility initial state
+        updateNavVisibility();
+        // establish initial history state that matches current view
+        try {
+          const initial = (function(){
+            if (authCard && !authCard.classList.contains('hidden')) return {page:'auth', authMode};
+            if (introScreen && !introScreen.classList.contains('hidden')) return {page:'intro'};
+            if (myPageView && !myPageView.classList.contains('hidden')) return {page:'my'};
+            if (mainApp && !mainApp.classList.contains('hidden')) return {page:'main'};
+            return {page:'intro'};
+          })();
+          replaceAppState(initial.page, initial);
+        } catch (e) { /* ignore */ }
+      });
+
+      // handle browser back/forward to navigate app views
+      window.addEventListener('popstate', (ev) => {
+        const state = ev.state || {};
+        __isHandlingPopstate = true;
+        try {
+          const page = state.page || 'intro';
+          switch (page) {
+            case 'auth': showAuthForm(state.authMode || 'login'); break;
+            case 'main': showMainApp(); break;
+            case 'my': showMyPage(); break;
+            case 'recommend': showMainContent(); break;
+            case 'onboarding':
+              onboardingStep = typeof state.step === 'number' ? state.step : 0;
+              renderOnboardingStep();
+              break;
+            case 'intro':
+            default:
+              showIntro();
+              break;
+          }
+        } finally {
+          // keep handling flag for a short window to avoid accidental push during delayed UI transitions
+          setTimeout(() => { __isHandlingPopstate = false; }, 500);
+        }
       });
     </script>
   </body>
